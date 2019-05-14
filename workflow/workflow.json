@@ -1,0 +1,116 @@
+{
+	"createTime": 1550158121396,
+	"name": "testworkflow",
+	"description": "Workflow for Simple Worker example.",
+	"version": 1,
+	"tasks": [{
+		"name": "get_starting_params",
+		"taskReferenceName": "get_starting_params",
+		"description": "Getting starter params for the Workflow.",
+		"inputParameters": {
+            "start_id": "${workflow.input.start_id}",
+			"env": {
+				"taskId": "${CPEWF_TASK_ID}",
+				"workflowId": "${HOSTNAME}"
+			}
+		},
+		"type": "SIMPLE",
+		"startDelay": 0,
+		"optional": false
+	},
+{
+		"name": "config_properties",
+		"taskReferenceName": "config_properties",
+		"description": "Configuring status based on entry params.",
+		"inputParameters": {
+            "conf_flags": "${get_profile.output.conf_flags}",
+            "conf_starter": "${get_profile.output.conf_starter}",
+			"env": {
+				"taskId": "${CPEWF_TASK_ID}",
+				"workflowId": "${HOSTNAME}"
+			}
+		},
+		"type": "SIMPLE",
+		"startDelay": 0,
+		"optional": false
+	},
+    {
+            "name": "parallel_fork",
+            "taskReferenceName": "paralell_fork",
+            "type": "FORK_JOIN",
+            "forkTasks": [
+              [
+                {
+                  "name": "get_users",
+                  "taskReferenceName": "get_users",
+                  "inputParameters": {
+            "conf_flags": "${config_properties.output.conf_flags}",
+            "conf_alert": "${config_properties.output.conf_message}",
+            "conf_starter": "${config_properties.output.conf_starter}",
+			"env": {
+				"taskId": "${CPEWF_TASK_ID}",
+				"workflowId": "${HOSTNAME}"
+			}
+		},
+                  "type": "SIMPLE",
+                  "startDelay": 0,
+                  "optional": false
+                }
+              ],
+              [
+                {
+                  "name": "get_data",
+                  "taskReferenceName": "get_data",
+                  "inputParameters": {
+            "conf_flags": "${config_properties.output.conf_flags}",
+            "conf_alert": "${config_properties.output.conf_message}",
+            "profile_id": "${config_properties.output.conf_starter}",
+			"env": {
+				"taskId": "${CPEWF_TASK_ID}",
+				"workflowId": "${HOSTNAME}"
+            }
+			},
+                  "type": "SIMPLE",
+                  "startDelay": 0,
+                  "optional": false
+                }
+              ]
+            ],
+            "startDelay": 0,
+            "optional": false
+          },
+          {
+            "name": "parallel_join",
+            "taskReferenceName": "parallel_join",
+            "type": "JOIN",
+            "startDelay": 0,
+            "joinOn": [
+              "get_users",
+              "get_data"
+            ],
+            "optional": false
+          },
+{
+		"name": "send_message",
+		"taskReferenceName": "send_message",
+		"description": "Send final message to users.",
+		"inputParameters": {
+            "conf_flags": "${get_starting_params.output.conf_flags}",
+            "conf_message": "${config_properties.output.conf_message}",
+            "conf_starter": "${get_starting_params.output.conf_starter}",
+            "get_users": "${get_users.output.template}",
+            "get_data": "${get_data.output.data}",
+			"env": {
+				"taskId": "${CPEWF_TASK_ID}",
+				"workflowId": "${HOSTNAME}"
+			}
+		},
+		"type": "SIMPLE",
+		"startDelay": 0,
+		"optional": false
+	}],
+	"outputParameters": {},
+	"schemaVersion": 1,
+	"restartable": true,
+	"workflowStatusListenerEnabled": false
+}
