@@ -70,7 +70,7 @@ public class StarterWorker implements Worker {
 	 */
 	private void processGetStartingParams(Task task,TaskResult result) {
 		
-		String confStarter = Utils.getStarter((String)task.getInputData().get("start_id"));
+		String confStarter = (String) task.getInputData().get("start_id") + task.getTaskDefName();
 		
 		logger.info("-----\n");
 		logger.info("Running task: "+task.getTaskDefName());
